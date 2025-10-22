@@ -7,6 +7,7 @@
 extern bool rangeEvent;
 DistanceSensor MySensor;
 serial_manager_c msg;
+VL53L0X_RangingMeasurementData_t measure;
 // uint16_t measure = 0;
 // uint8_t buffer[15] = {0};
 
@@ -36,6 +37,11 @@ void setup() {
 	// enableInterrupt(10, Int_dist, CHANGE);
 	green_color;
 	msg.init_struct();
+	Serial.print("Firmware Version: ");
+	Serial.println(FW_VERSION);
+	MySensor.getRangingMeasurement(&measure, false);
+	Serial.print("Distancia en mm: ");
+	Serial.println(measure.RangeMilliMeter);
 }
 
 void loop() {
@@ -55,12 +61,14 @@ void loop() {
 		rangeEvent = false;
 		VL53L0X_RangingMeasurementData_t measure;
 		MySensor.getRangingMeasurement(&measure, false); 
-		if (measure.RangeStatus != 4 && measure.RangeMilliMeter <= 100 && measure.RangeMilliMeter >= 50) { 
+		if (measure.RangeStatus != 4 && measure.RangeMilliMeter <= MySensor.get_high_limit() && measure.RangeMilliMeter >= MySensor.get_low_limit()) { 
+			red_color;
 			Serial.print("Distancia en mm: ");
 			Serial.println(measure.RangeMilliMeter);
-			red_color;
+			Serial.println("\nObjeto detectado dentro de Umbral\n");
 		} else if(measure.RangeStatus != 4 && measure.RangeMilliMeter < 8000) {
 			green_color;
+			Serial.println("\nObjeto ha salido de Umbral\n");
 		}else {
 			blue_color;
 		}

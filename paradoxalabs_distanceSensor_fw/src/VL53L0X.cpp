@@ -2,7 +2,10 @@
 
 bool rangeEvent = false;
 
-DistanceSensor::DistanceSensor() : Adafruit_VL53L0X() {}
+DistanceSensor::DistanceSensor() : Adafruit_VL53L0X() {
+	lowLimit = 50;		//Límite bajo por defecto
+	highLimit = 250;    //Límite alto por defecto
+}
 
 void DistanceSensor::SensorInit(void){
 	Serial.println("Debug 1");
