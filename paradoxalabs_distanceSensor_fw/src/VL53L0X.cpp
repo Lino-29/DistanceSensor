@@ -1,5 +1,7 @@
 #include "VL53L0X.hpp"
 
+bool rangeEvent = false;
+
 DistanceSensor::DistanceSensor() : Adafruit_VL53L0X() {}
 
 void DistanceSensor::SensorInit(void){
@@ -54,16 +56,28 @@ void DistanceSensor::IntConfig(void){
 }
 
 uint16_t DistanceSensor::GetRange(void) {
-	// return sensor.readRange();
 
-	VL53L0X_RangingMeasurementData_t measure; // keep our own private copy
+}
 
-	Status = getSingleRangingMeasurement(&measure, false);
-// _	sensor._rangeStatus = measure.RangeStatus;
+void DistanceSensor::set_low_limit(uint16_t value) {
+	lowLimit = value;
+}
 
-	if (Status == VL53L0X_ERROR_NONE)
-		return measure.RangeMilliMeter;
-	// Other status return something totally out of bounds...
-	return 0xffff;
+void DistanceSensor::set_high_limit(uint16_t value) {
+	highLimit = value;
+}
+
+uint16_t DistanceSensor::get_low_limit(void) {
+	return lowLimit;
+}
+
+uint16_t DistanceSensor::get_high_limit(void) {
+	return highLimit;
+}
+
+//Función interrupción para VL53L0X
+void Int_dist(void){
+	rangeEvent = true;
+	
 }
 
