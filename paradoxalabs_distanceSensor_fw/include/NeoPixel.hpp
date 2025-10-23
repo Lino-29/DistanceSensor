@@ -1,3 +1,6 @@
+#ifndef _NEOPIXEL_HPP_
+#define _NEOPIXEL_HPP_
+
 #include <Arduino.h>
 
 
@@ -11,3 +14,5 @@ uint8_t BLUE = A2;
 #define 	blue_color		digitalWrite(RED, LOW); digitalWrite(GREEN, LOW); digitalWrite(BLUE, HIGH);
 #define 	violeta_color	digitalWrite(RED, HIGH); digitalWrite(GREEN, LOW); digitalWrite(BLUE, HIGH);
 #define		off_color		digitalWrite(RED, LOW); digitalWrite(GREEN, LOW); digitalWrite(BLUE, LOW);
+
+#endif

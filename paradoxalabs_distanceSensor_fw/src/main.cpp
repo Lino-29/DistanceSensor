@@ -4,12 +4,10 @@
 #include "SerialData.hpp"	
 // #include <EnableInterrupt.h>
 
-extern bool rangeEvent;
+extern bool rangeEvent;						//Estado de interrupción
 DistanceSensor MySensor;
 serial_manager_c msg;
 VL53L0X_RangingMeasurementData_t measure;
-// uint16_t measure = 0;
-// uint8_t buffer[15] = {0};
 
 void setup() {
 	pinMode(ledPin, OUTPUT);
@@ -26,50 +24,56 @@ void setup() {
 	digitalWrite(8, HIGH);
 
 	
-	MySensor.SensorInit();
-	MySensor.IntConfig();
-	MySensor.SetRange(100, 50);
-	MySensor.setDeviceMode(VL53L0X_DEVICEMODE_CONTINUOUS_RANGING, true);
-	// MySensor.setDeviceMode(VL53L0X_DEVICEMODE_SINGLE_RANGING, true);
-	MySensor.startMeasurement();
+	MySensor.sensor_init();													//Inicializacion y configuracion de sensor
+	MySensor.int_config();													//Configuración de las interrupciones del sensor
+	MySensor.startMeasurement();											//Se habilita la toma de mediciones
 	_delay_ms(100);
-	attachInterrupt(1, Int_dist, FALLING);
-	// enableInterrupt(10, Int_dist, CHANGE);
-	green_color;
+	attachInterrupt(1, Int_dist, FALLING);									//Se habilita el manejo de interrupciones por flanco de bajada.
+	green_color;																//Color por defecto cuando no hay objeto dentro de los limites maximo y minimo del sensor 20 mm a 2000 mm
 	msg.init_struct();
-	Serial.print("Firmware Version: ");
+	Serial.print("Version de Firmware: ");
 	Serial.println(FW_VERSION);
-	MySensor.getRangingMeasurement(&measure, false);
-	Serial.print("Distancia en mm: ");
-	Serial.println(measure.RangeMilliMeter);
+	MySensor.get_measure();
 }
 
 void loop() {
 	
 	if(msg.get_data()) {
-
-		msg.GetMessage(MySensor);
-		
+		msg.get_message(MySensor);
 	}
 
 	if(msg.sensor_config_rady()) {
-		MySensor.SetRange(MySensor.get_high_limit(), MySensor.get_low_limit());
-		Serial.println("Rangos Configurados");
+		MySensor.set_range(MySensor.get_high_limit(), MySensor.get_low_limit());
+		Serial.println("Rango de umbral configurado");
+		for(uint8_t i=0;i<3;i++) {
+			violeta_color;
+			_delay_ms(50);
+			off_color;
+			_delay_ms(50);
+		}
 	}
 	
+	//Se descrifra el area donde se encontró el objeto.
 	if(rangeEvent){
 		rangeEvent = false;
-		VL53L0X_RangingMeasurementData_t measure;
-		MySensor.getRangingMeasurement(&measure, false); 
-		if (measure.RangeStatus != 4 && measure.RangeMilliMeter <= MySensor.get_high_limit() && measure.RangeMilliMeter >= MySensor.get_low_limit()) { 
+
+		MySensor.find_object();
+		if(MySensor.get_in_range() && !MySensor.get_out_of_range()) {
 			red_color;
-			Serial.print("Distancia en mm: ");
-			Serial.println(measure.RangeMilliMeter);
-			Serial.println("\nObjeto detectado dentro de Umbral\n");
-		} else if(measure.RangeStatus != 4 && measure.RangeMilliMeter < 8000) {
+			if(!msg.get_evento_dentro()) {
+				Serial.println("\nObjeto detectado dentro de umbral\n");
+				msg.set_evento_dentro(true);
+				msg.set_evento_fuera(false);
+			}
+		} else if(!MySensor.get_in_range() && !MySensor.get_out_of_range()) {
 			green_color;
-			Serial.println("\nObjeto ha salido de Umbral\n");
-		}else {
+			if(!msg.get_evento_fuera()) {
+				Serial.println("\nObjeto fuera de umbral\n");
+				msg.set_evento_dentro(false);
+				msg.set_evento_fuera(true);
+			}
+		} else if(MySensor.get_out_of_range()){
+			MySensor.set_out_of_range(false);
 			blue_color;
 		}
 		MySensor.clearInterruptMask(false);

@@ -5,15 +5,15 @@ bool serial_manager_c::get_data(void) {
     data.bytes = Serial.available();
     
     if(data.bytes > 0) {
-        Serial.println(data.bytes);
+        // Serial.println(data.bytes);
         for(uint8_t i=0; i<data.bytes; i++) {
             data.buffer[i] = Serial.read();
-            Serial.print(data.buffer[i], 16);
+            /* Serial.print(data.buffer[i], 16);
             Serial.print(" - ");
-            Serial.println(Serial.available());
+            Serial.println(Serial.available()); */
         }
 
-        Serial.println(Serial.available());
+        // Serial.println(Serial.available());
 
         if(data.buffer[0] == '<' && data.bytes > 1) {
             data.msg_complete = true;
@@ -34,6 +34,8 @@ void serial_manager_c::init_struct(void) {
     data.msg_complete = 0;
     data.highLimit = false;
     data.lowLimit = false;
+    data.evento_dentro = false;
+    data.evento_fuera = false;
 
     memset(data.buffer, 0, BUFFER_SIZE);
 }
@@ -42,7 +44,7 @@ void serial_manager_c::ClearBuffer(void) {
     memset(data.buffer, 0, BUFFER_SIZE);
 }
 
-void serial_manager_c::GetMessage(DistanceSensor &sensor) {
+void serial_manager_c::get_message(DistanceSensor &sensor) {
     if(data.buffer[1] == 'S' && data.buffer[2] == 'L' && data.buffer[3] == 'L') {
         uint16_t value = ((uint16_t)data.buffer[4] << 8) | data.buffer[5];
 
@@ -75,16 +77,18 @@ bool serial_manager_c::sensor_config_rady(void) {
     }
 }
 
-uint16_t serial_manager_c::Hex2Dec(char *character){
-
-    if(isdigit(character[0]) || character[0] == 48){
-		return atoi(character);
-	}else return 10 + (toupper(character[0]) - 'A');
+void serial_manager_c::set_evento_dentro(bool value) {
+    data.evento_dentro = value;
 }
 
-/* uint16_t serial_manager_c::Hex2Dec(uint8_t *character){
+bool serial_manager_c::get_evento_dentro(void) {
+    return data.evento_dentro;
+}
 
-    if(isdigit(character[0]) || character[0] == 48){
-		return atoi(character);
-	}else return 10 + (toupper(character[0]) - 'A');
-} */
+void serial_manager_c::set_evento_fuera(bool value) {
+    data.evento_fuera = value;
+}
+
+bool serial_manager_c::get_evento_fuera(void) {
+    return data.evento_fuera;
+}
